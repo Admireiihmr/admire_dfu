@@ -152,16 +152,21 @@ def main():
                     _, processed_image = process_image(image)
                     st.image(processed_image, caption="Processed Image", use_container_width=True)
                     predictions = predict_image(processed_image)
-                    if predictions and "probabilities" in predictions:
-                        st.success("Analysis Complete!")
-                        st.subheader("Results:")
-                        for label, prob in zip(predictions["labels"], predictions["probabilities"]):
-                            st.markdown(
-                                f"<div style='padding:1rem; background:#f8fafc; border-radius:8px; margin:0.5rem 0;'>"
-                                f"<b>{label}</b>: {float(prob):.2f}%"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
+                    if predictions:
+                        if "probabilities" in predictions and "labels" in predictions:
+                            st.success("Analysis Complete!")
+                            st.subheader("Results:")
+                            for label, prob in zip(predictions["labels"], predictions["probabilities"]):
+                                st.markdown(
+                                    f"<div style='padding:1rem; background:#f8fafc; border-radius:8px; margin:0.5rem 0;'>"
+                                    f"<b>{label}</b>: {float(prob):.2f}%"
+                                    f"</div>",
+                                    unsafe_allow_html=True
+                                )
+                        elif "error" in predictions:
+                            st.error(f"Backend Error: {predictions['error']}")
+                        else:
+                            st.error("Unexpected response from backend.")
 
 if __name__ == "__main__":
     main()
