@@ -4,6 +4,7 @@ from io import BytesIO
 from PIL import Image
 import streamlit as st
 import numpy as np
+import cv2
 
 # --- Custom CSS for Modern UI ---
 st.markdown(
@@ -65,16 +66,22 @@ st.markdown(
 )
 
 def process_image(image):
-    # Only use PIL for resizing and conversion
     image = image.convert("RGB").resize((224, 224))
-    return image, image
+    img_np = np.array(image)
+    img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    b, g, r = cv2.split(img_np)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    b, g, r = clahe.apply(b), clahe.apply(g), clahe.apply(r)
+    processed_img = cv2.merge((b, g, r))
+    processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
+    return image, Image.fromarray(processed_img)
 
 def predict_image(image):
     buffer = BytesIO()
     image.save(buffer, format="PNG")
     img_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
     try:
-        response = requests.post("https://backendapi-ctgr.onrender.com/predict", json={"file": img_data})
+        response = requests.post("https://connect56-2.onrender.com/predict", json={"file": img_data})
         response.raise_for_status()
         return response.json()
     except Exception as e:
